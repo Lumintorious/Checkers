@@ -17,10 +17,10 @@ import checkers.{given, *}
 Checking if a type `T` is also a type `X` returns `ValidatedNel[FailedCheck, T & X]`
 ```Scala
 val noSymbols = "some string".checkedAs[AlphaNumeric]
-// Valid("some string": String & AlphaNumeric)
+// ==> Valid("some string": String & AlphaNumeric)
 
 val manySymbols = "some |+| -- >>=".checkedAs[AlphaNumeric]
-// Invalid('some |+| -- >>=' is not AlphaNumeric)
+// ==> Invalid('some |+| -- >>=' is not AlphaNumeric)
 ```
 
 ### Basic use
@@ -28,8 +28,11 @@ val manySymbols = "some |+| -- >>=".checkedAs[AlphaNumeric]
 def safeDiv(numerator: Double, denominator: Double & NonZero): Double =
   numerator / denominator
   
-val result1 = safeDiv.checking(12D, 4D) // Valid(3D)
-val result2 = safeDiv.checking(12D, 0D) // Invalid('0D' not NonZero)
+val result1 = safeDiv.checking(12D, 4D)
+// ==> Valid(3D)
+
+val result2 = safeDiv.checking(12D, 0D)
+// ==> Invalid('0D' not NonZero)
 ```
 
 ### Multiple checks with intersection types
@@ -39,16 +42,16 @@ def isDrunk(age: Int & GT[21], drinkAlcohol: Float & Positive & LT[0.6F]): Boole
   age - (age * drinkAlcohol) // Some arbitrary logic
   
 val youngVsVodka = isDrunk.checking(24, 0.5F)
-// runs fine
+// ==> runs fine
 
 val babyVsBeer = isDrunk.checking(2, 0.08F)
-// Invalid('2' not GT[21]
-)
+// ==> Invalid('2' not GT[21]
+
 val babyVsHardVodka = isDrunk.checking(2, 0.64F)
-// Invalid('2' is not GT[21], '0.64' is not LT[0.6]) 
+// ==> Invalid('2' is not GT[21], '0.64' is not LT[0.6]) 
 
 val personVsNegative = isDrunk.checking(30, -0.34F)
-// Invalid('-0.34' is not Positive) 
+// ==> Invalid('-0.34' is not Positive) 
 ```
 
 ### Declaring a new Checker
@@ -63,8 +66,11 @@ object OtherFile {
 object ClientCode {
   import OtherFile.{given, *}
   
-  2F.checkAs[Unitary] // Invalid('2' is not Unitary)
-  0.43F.checkAs[Unitary] // Valid(0.43: Float & Unitary)
+  2F.checkAs[Unitary]
+  // ==> Invalid('2' is not Unitary)
+  
+  0.43F.checkAs[Unitary]
+  // ==> Valid(0.43: Float & Unitary)
 }
 
 ```
