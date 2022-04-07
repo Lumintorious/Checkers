@@ -1,37 +1,60 @@
-## Welcome to GitHub Pages
+## Welcome to Checkers
 
-You can use the [editor on GitHub](https://github.com/Lumintorious/Checkers/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+Checkers is a library that adds type checks to Scala3 using the built-in intersection and union types.
+This allows handling checked types as if they were regular types that can be used as parameters or return types, respecting variance.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+### Basic idea
+- Any type can be given a Checker instance to another type (preferably opaque).
+- Checking a type to another means using that instance to return Valid or Invalid (from Cats)
+- Functions working with checked types can be called with 'checking(...)' to be used more concretely
 
-### Markdown
-
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+### Imports
+```Scala
+import checkers.{given, *}
 ```
 
-For more details see [Basic writing and formatting syntax](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
+### Basic idea
+```Scala
+val noSymbols = "some string".checkedAs[AlphaNumeric] // Valid("some string": String & AlphaNumeric)
+val manySymbols = "some |+| -- >>=".checkedAs[AlphaNumeric] // Invalid('some |+| -- >>=' is not AlphaNumeric)
+```
 
-### Jekyll Themes
+### Basic use
+```Scala
+def safeDiv(numerator: Double, denominator: Double & NonZero): Double =
+  numerator / denominator
+  
+val result1 = safeDiv.checking(12D, 4D) // Valid(3D)
+val result2 = safeDiv.checking(12D, 0D) // Invalid('0D' not NonZero)
+```
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/Lumintorious/Checkers/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+### Multiple checks with intersection types
+- Intersection type checking should behave like and-ing the checks of their parts.
+```Scala
+def isDrunk(age: Int & GT[21], drinkAlcohol: Float & Positive & LT[0.6F]): Boolean =
+  age - (age * drinkAlcohol) // Some arbitrary logic
+  
+val youngVsVodka = isDrunk.checking(24, 0.5F) // runs fine
+val babyVsBeer = isDrunk.checking(2, 0.08F) // Invalid('2' not GT[21])
+val babyVsHardVodka = isDrunk.checking(2, 0.64F) // Invalid('2' is not GT[21], '0.64' is not LT[0.6]) 
 
-### Support or Contact
+val personVsNegative = isDrunk.checking(30, -0.34F) // Invalid('-0.34' is not Positive) 
+```
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+### Declaring a new Checker
+```Scala
+
+object OtherFile {
+  opaque type Unitary = Any
+  inline given Checker[Float, Unitary] =
+    Checker { f => f >= -1 && f <= 1 } 
+}
+
+object ClientCode {
+  import OtherFile.{given, *}
+  
+  2F.checkAs[Unitary] // Invalid('2' is not Unitary)
+  0.43F.checkAs[Unitary] // Valid(0.43: Float & Unitary)
+}
+
+```
