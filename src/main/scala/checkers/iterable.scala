@@ -1,4 +1,4 @@
-package confinement
+package checkers
 
 opaque type SizeOf[N] = Any
 inline given [N <: Int](using V: ValueOf[N]): Checker[String, SizeOf[N]] =

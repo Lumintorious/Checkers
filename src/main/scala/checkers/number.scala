@@ -1,4 +1,4 @@
-package confinement
+package checkers
 
 import cats.data.Validated
 

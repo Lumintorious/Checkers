@@ -1,7 +1,7 @@
-package confinement.macros
+package checkers.macros
 
 import scala.quoted.*
-import confinement.*
+import checkers.*
 import cats.data.{Validated, ValidatedNel}
 import cats.data.NonEmptyList
 import scala.reflect.TypeTest
@@ -81,12 +81,12 @@ class ConfinementAccumulator(using val quotes: Quotes) {
       case failure: ImplicitSearchFailure => None
     }
 
-  def attemptToGiveMessage(in: T, out: T, confinement: Term): Term =
+  def attemptToGiveMessage(in: T, out: T, checkers: Term): Term =
     (in.asType, out.asType, messageFor(out)) match {
       case ('[inT], '[outT], Some(message)) => '{
-        val prev: Checker[inT, outT] = ${confinement.asExpr.asExprOf[Checker[inT, outT]]}
+        val prev: Checker[inT, outT] = ${checkers.asExpr.asExprOf[Checker[inT, outT]]}
         new Checker[inT, outT] {
-          def confine(actual: inT): ValidatedNel[BrokenConfinement, inT & outT] = {
+          def confine(actual: inT): ValidatedNel[FailedCheck, inT & outT] = {
             prev.confine(actual).leftMap(l => NonEmptyList.of(l.map(
               broken => 
                 if(broken.isBasic) {
@@ -103,9 +103,9 @@ class ConfinementAccumulator(using val quotes: Quotes) {
         }
       }.asTerm
       case ('[inT], '[outT], _) => '{
-        val prev: Checker[inT, outT] = ${confinement.asExpr.asExprOf[Checker[inT, outT]]}
+        val prev: Checker[inT, outT] = ${checkers.asExpr.asExprOf[Checker[inT, outT]]}
         new Checker[inT, outT] {
-          def confine(actual: inT): ValidatedNel[BrokenConfinement, inT & outT] =
+          def confine(actual: inT): ValidatedNel[FailedCheck, inT & outT] =
             prev.confine(actual).leftMap(l => NonEmptyList.of(l.map(
             broken =>
               if(broken.isBasic) {
@@ -120,7 +120,7 @@ class ConfinementAccumulator(using val quotes: Quotes) {
             ).head)
         }
       }.asTerm
-      case _ => confinement
+      case _ => checkers
     }
 
   def accumulateSimpleType(in: T, out: T): Term = {
@@ -140,7 +140,7 @@ class ConfinementAccumulator(using val quotes: Quotes) {
                 Validated.condNel(
                   actual.isInstanceOf[outT],
                   actual.asInstanceOf[inT & outT],
-                  BrokenConfinement.explain(s"'${actual}' was not an instance of ${name}")
+                  FailedCheck.explain(s"'${actual}' was not an instance of ${name}")
                     .copy(isBasic = true)
                 )
             }

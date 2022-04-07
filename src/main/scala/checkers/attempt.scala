@@ -1,6 +1,6 @@
-package confinement
+package checkers
 
-import confinement.macros.ConfinementAccumulator
+import checkers.macros.ConfinementAccumulator
 
 final class ValidatingInspace()
 inline given [From, To](using VI: ValidatingInspace, C: Checker[From, To]): Conversion[From, ValidatedConfinement[To]] =

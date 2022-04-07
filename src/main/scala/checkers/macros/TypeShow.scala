@@ -1,4 +1,4 @@
-package confinement.macros
+package checkers.macros
 
 import scala.quoted.*
 

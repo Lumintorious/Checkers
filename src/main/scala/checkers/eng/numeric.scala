@@ -1,4 +1,4 @@
-package confinement
+package checkers
 package eng
 
 inline given [N]: IfBroken[GT[N]] = n => s"${n} wasn't greater than ${valueOf[N]}"

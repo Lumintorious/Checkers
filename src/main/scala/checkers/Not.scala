@@ -1,3 +1,3 @@
-package confinement
+package checkers
 
 opaque type Not[T] = Any

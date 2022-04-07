@@ -1,4 +1,4 @@
-package confinement
+package checkers
 
 export string.{given, *}
 

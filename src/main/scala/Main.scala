@@ -1,6 +1,6 @@
-import confinement.{given, *}
-import confinement.unsafe.*
-import confinement.macros.*
+import checkers.{given, *}
+import checkers.unsafe.*
+import checkers.macros.*
 import cats.syntax.validated.*
 
 import eng.given
@@ -24,8 +24,8 @@ type Cute = Hamster
   
   val razvan: Entity = Person("Razvan", 24)
   val zapacel: Entity = Hamster("Zapacel", 1)
-  val razvanResult = razvan.validateAs[Person & Entity.CanVote]
-  val zapacelResult = zapacel.validateAs[Person & Entity.CanVote]
+  val razvanResult = razvan.checkAs[Person & Entity.CanVote]
+  val zapacelResult = zapacel.checkAs[Person & Entity.CanVote]
   println(razvanResult)
   println(zapacelResult)
 

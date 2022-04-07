@@ -1,13 +1,13 @@
-package confinement
+package checkers
 
 import cats.data.{Validated, ValidatedNel}
 
-final case class BrokenConfinement(
+final case class FailedCheck(
   accessPoints: List[String],
   explanation: String,
   isBasic: Boolean = true
 ) {
-  def reportedInto(field: String): BrokenConfinement =
+  def reportedInto(field: String): FailedCheck =
     this.copy(accessPoints = field :: accessPoints)
 
   def path: String =
@@ -17,11 +17,11 @@ final case class BrokenConfinement(
     s"${path}${if accessPoints.isEmpty then "" else ": "}${explanation}"
 }
 
-object BrokenConfinement {
+object FailedCheck {
   inline def explain(explanation: String) =
-    BrokenConfinement(List.empty, explanation)
+    FailedCheck(List.empty, explanation)
 
-  inline given Conversion[String, BrokenConfinement] =
+  inline given Conversion[String, FailedCheck] =
     explain(_)
 }
 
@@ -32,7 +32,7 @@ trait BrokenConfinementMessage[X] {
 type IfBroken[X] = BrokenConfinementMessage[X]
 
 object BrokenConfinements {
-  transparent inline def unapplySeq(validated: ValidatedNel[BrokenConfinement, ?]): List[BrokenConfinement] =
+  transparent inline def unapplySeq(validated: ValidatedNel[FailedCheck, ?]): List[FailedCheck] =
     validated match
       case Validated.Valid(_) => List()
       case Validated.Invalid(err) => err.toList
