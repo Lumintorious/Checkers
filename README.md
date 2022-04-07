@@ -7,6 +7,8 @@ This allows handling checked types as if they were regular types that can be use
 - Any type can be given a Checker instance to another type (preferably opaque).
 - Checking a type to another means using that instance to return Valid or Invalid (from Cats)
 - Functions working with checked types can be called with 'checking(...)' to be used more concretely
+- The checking is done at RUNTIME but the type restrictions are represented at COMPILE TIME.
+- No checks for constant literals (more trouble than they are worth)
 
 ### Imports
 ```Scala
