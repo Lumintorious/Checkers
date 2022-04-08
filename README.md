@@ -8,7 +8,7 @@ This allows handling checked types as if they were regular types that can be use
 - Checking a type to another means using that instance to return Valid or Invalid (from Cats)
 - Functions working with checked types can be called with 'checking(...)' to be used more concretely
 - The checking is done at RUNTIME but the type restrictions are represented at COMPILE TIME.
-- No checks for constant literals (more trouble than they are worth)
+- NO compiletime checks for constant literals (more trouble than they are worth)
 
 ### Imports
 ```Scala
@@ -16,12 +16,12 @@ import checkers.{given, *}
 ```
 
 ### Basic idea
-Checking if a type `T` is also a type `X` returns `ValidatedNel[FailedCheck, T & X]`
+Checking if a type `T` is also a type `X` returns `Checked[T & X]`, an alias for `ValidatedNel[FailedCheck, T & X]`
 ```Scala
-val noSymbols = "some string".checkedAs[AlphaNumeric]
+val noSymbols = "some string".checkAs[AlphaNumeric]
 // ==> Valid("some string": String & AlphaNumeric)
 
-val manySymbols = "some |+| -- >>=".checkedAs[AlphaNumeric]
+val manySymbols = "some |+| -- >>=".checkAs[AlphaNumeric]
 // ==> Invalid('some |+| -- >>=' is not AlphaNumeric)
 ```
 
@@ -34,7 +34,7 @@ val result1 = safeDiv.checking(12D, 4D)
 // ==> Valid(3D)
 
 val result2 = safeDiv.checking(12D, 0D)
-// ==> Invalid('0D' not NonZero)
+// ==> Invalid(denominator: '0D' not NonZero)
 ```
 
 ### Multiple checks with intersection types
@@ -47,13 +47,13 @@ val youngVsVodka = isDrunk.checking(24, 0.5F)
 // ==> runs fine
 
 val babyVsBeer = isDrunk.checking(2, 0.08F)
-// ==> Invalid('2' not GT[21]
+// ==> Invalid(age: '2' not GT[21]
 
 val babyVsHardVodka = isDrunk.checking(2, 0.64F)
-// ==> Invalid('2' is not GT[21], '0.64' is not LT[0.6]) 
+// ==> Invalid(age: '2' is not GT[21], drinkAlcohol: '0.64' is not LT[0.6]) 
 
 val personVsNegative = isDrunk.checking(30, -0.34F)
-// ==> Invalid('-0.34' is not Positive) 
+// ==> Invalid(age: '-0.34' is not Positive) 
 ```
 
 ### Declaring a new Checker
