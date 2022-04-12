@@ -9,5 +9,7 @@ lazy val root = project
     scalaVersion := scala3Version,
 
     libraryDependencies += "org.typelevel" %% "cats-core" % "2.7.0",
+    libraryDependencies += "io.circe" %% "circe-core" % "0.14.1",
+    libraryDependencies += "io.circe" %% "circe-parser" % "0.14.1",
     libraryDependencies += "org.scalameta" %% "munit" % "0.7.29" % Test
   )

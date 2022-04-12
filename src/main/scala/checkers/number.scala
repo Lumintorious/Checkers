@@ -1,18 +1,18 @@
 package checkers
 
-import cats.data.Validated
-
 export number.{given, *}
 
 object number {
-  opaque type GT[X] = Any
-  inline given gt[N, T <: N](using NM: Numeric[N]): Checker[N, GT[T]] =
-    Checker[N, GT[T]](n => NM.gt(n, valueOf[T]))
+  opaque type Greater[X] = Any
+  inline given gt[N, N2, T <: N2](using NM: Numeric[N], NM2: Numeric[N2]): Checker[N, Greater[T]] =
+    Checker { NM.toDouble(_) > NM2.toDouble(valueOf[T]) }
 
-  opaque type LT[X] = Any
-  inline given lt[N, T <: N](using NM: Numeric[N]): Checker[N, LT[T]] =
-    Checker[N, LT[T]] { NM.lt(_, valueOf[T]) }
+  opaque type Less[X] = Any
+  inline given lt[N, N2, T <: N2](using NM: Numeric[N], NM2: Numeric[N2]): Checker[N, Less[T]] =
+    Checker { NM.toDouble(_) < NM2.toDouble(valueOf[T]) }
 
+  type GT[X] = Greater[X]
+  type LT[X] = Less[X]
   type GTEQ[X] = GT[X] | SameAs[X]
   type LTEQ[X] = LT[X] | SameAs[X]
   type Between[L, H] = GT[H] & LT[L]
@@ -41,8 +41,4 @@ object number {
     Checker[N, Even] { NM.toDouble(_) % 2 == 0 }
 
   type Odd = Integral & Not[Even]
-
-  // opaque type PerfectSquare = Any
-  // inline given perfectSquare[N](using NM: Numeric[N]): Checker[N, PerfectSquare] =
-    // n => Validated.condNel(Math.sqrt(NM.toDouble(n)) % 1 == 0, n, s"'${n}' was not a perfect square")
 }
