@@ -11,5 +11,5 @@ inline given [L, H]: IfBroken[Between[L, H]] = n =>
 inline given IfBroken[NonZero] = n => s"'${n}' was zero"
 inline given IfBroken[IsZero] = n => s"'${n}' was not zero"
 
-inline given [N]: IfBroken[SizeOf[N]] = l => s"'${l}' wasn't of exactly size ${valueOf[N]}"
 inline given IfBroken[AlphaNumeric] = s => s"'${s}' was not completely alphanumeric"
+inline given IfBroken[LettersOnly] = s => s"'${s}' contains characters other than letters"

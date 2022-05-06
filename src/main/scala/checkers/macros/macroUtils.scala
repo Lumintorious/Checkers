@@ -2,6 +2,21 @@ package checkers.macros
 
 import quoted.*
 
+inline def summonInlineFromConcrete[F[_], T]: F[T] = ${ summonInlineFromConcreteMacro [F, T] }
+
+def summonInlineFromConcreteMacro[F[_] : Type, T : Type](using quotes: Quotes): Expr[F[T]] = {
+  import quotes.reflect.*
+  val tRepr = TypeRepr.of[T]
+  val fRepr = TypeRepr.of[F]
+  val concrete = findConcreteTypes(tRepr).head
+  Implicits.search(fRepr.appliedTo(concrete)) match {
+    case success: ImplicitSearchSuccess =>
+      success.tree.asExprOf[F[T]]
+    case failure: ImplicitSearchFailure =>
+      report.errorAndAbort(failure.explanation)
+  }
+}
+
 def summonExpr[T : Type](using quotes: Quotes): Either[String, Expr[T]] = {
   import quotes.reflect.*
   Implicits.search(TypeRepr.of[T]) match {

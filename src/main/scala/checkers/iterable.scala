@@ -1,7 +1,9 @@
 package checkers
 
 opaque type SizeOf[N] = Any
-inline given [N <: Int](using V: ValueOf[N]): Checker[String, SizeOf[N]] =
+export checkers.definitions.collection.{given, *}
+
+inline given sizeOfCheck[N <: Int](using V: ValueOf[N]): Checker[String, SizeOf[N]] =
   Checker[String, SizeOf[N]](
     _.size == V.value
   )
@@ -13,7 +15,13 @@ inline given [L <: Iterable[?], N <: Int](using V: ValueOf[N]): Checker[L, SizeO
 opaque type SizeGT[N] = Any
 inline given [L <: Iterable[?], N <: Int](using V: ValueOf[N]): Checker[L, SizeGT[N]] =
   Checker[L, SizeGT[N]](
-    _.size >= V.value
+    _.size > V.value
+  )
+
+opaque type SizeLT[N] = Any
+inline given [L <: Iterable[?], N <: Int](using V: ValueOf[N]): Checker[L, SizeLT[N]] =
+  Checker[L, SizeLT[N]](
+    _.size < V.value
   )
 
 opaque type NonEmpty = Any

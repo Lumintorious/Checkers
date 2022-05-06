@@ -7,14 +7,15 @@ import cats.data.NonEmptyList
 import scala.annotation.StaticAnnotation
 import checkers.macros.TypeShow
 import checkers.macros.CheckerMacros
+import checkers.typeclasses.*
 
 type Checked[T] = Either[List[FailedCheck], T]
 
 opaque type BuiltChecker[A, B] <: Checker[A, B] = Checker[A, B]
 
 object BuiltChecker {
-  transparent inline given synthesize[T, Types](using NotGiven[Checker[T, Types]]): BuiltChecker[T, Types] =
-    CheckerMacros.make[T, Types].built
+  transparent inline given synthesize[T, Types](using NotGiven[Checker[T, Types]], NotGiven[BuiltChecker[T, Types]]): BuiltChecker[T, Types] =
+    CheckerMacros.make[Checker, T, Types].built
 }
 
 extension [A, B] (checker: Checker[A, B]) def built: BuiltChecker[A, B] = checker
@@ -42,6 +43,10 @@ trait Checker[Actual, Potential] private[checkers] {
 object Checker {
   inline given identity[T]: Checker[T, T] =
     Checker[T, T] { _ => true }
+
+  // inline given checkerFromIntrospector[A, B <: A](using I: Introspector[B]): Checker[A, B] = {
+  //   a => I.checkSelf(a.asInstanceOf[B])
+  // }
 
   inline def combine[Actual](v1: Checked[Actual], v2: Checked[?]): Checked[Actual] = {
     (v1, v2) match {
@@ -100,14 +105,10 @@ object Checker {
         .confine(actual)
         .swap
         .map(l => l.map( elem =>
-          if(elem.isBasic) {
-            elem.copy(
-              explanation = ifBroken.apply(actual),
-              isBasic = false
-            )
-          } else {
-            elem
-          }
+          elem.copy(
+            explanation = ifBroken.apply(actual),
+            isBasic = false
+          )
         ))
         .swap
     }
@@ -131,6 +132,27 @@ object Checker {
           s"'${actual}' is not valid"
         )))
       }
+    }
+  }
+
+  inline given Both[Checker] with {
+    def both[A, B, C](f1: Checker[A, B], f2: Checker[A, C]): Checker[A, B & C] =
+      f1 && f2
+  }
+
+  inline given CheckerLike[Checker] with {
+    inline def make[A, S](fn: A => Either[List[FailedCheck], A & S]): Checker[A, S] = {
+      new Checker[A, S] {
+        def confine(actual: A): Checked[A & S] = {
+          fn(actual)
+        }
+      }
+    }
+  }
+
+  inline given RenameError[Checker] with {
+    def rename[A, B](f: Checker[A, B])(rename: A => FailedCheck): Checker[A, B] = {
+      f.ifBroken(a => rename(a).explanation)
     }
   }
 }

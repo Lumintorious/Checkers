@@ -9,7 +9,7 @@ object IntrospectorMacros {
     ${ makeBasicMacro[T] }
 
   def makeBasicMacro[T : Type](using quotes: Quotes): Expr[Introspector[T]] = {
-    IntrospectorMacros().makeBasic[T]
+    IntrospectorMacros().makeBasicFromWidened[T]
   }
 
   inline def makeForProduct[T <: Product]: Introspector[T] =
@@ -42,7 +42,7 @@ class IntrospectorMacros(using val quotes: Quotes) {
     val productSymbol =
       concreteRepr
         .classSymbol
-        .filter(_.caseFields.length > 0)
+        // .filter(_.caseFields.length > 0)
         .getOrElse(reporter.notProduct[Concrete])
 
     val fieldsAndTypes = productSymbol.caseFields.map { symbol =>
@@ -80,6 +80,12 @@ class IntrospectorMacros(using val quotes: Quotes) {
           obj.asInstanceOf[Concrete].checkAs[T],
           Either.cond(failures.isEmpty, obj, failures)
         )
+    }
+  }
+
+  def makeBasicFromWidened[T : Type]: Expr[Introspector[T]] = {
+    TypeRepr.of[T].widen.asType.pipe { case '[widenedT] =>
+      makeBasic[widenedT].asExprOf[Introspector[T]]
     }
   }
 

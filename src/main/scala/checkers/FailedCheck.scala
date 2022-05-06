@@ -30,11 +30,14 @@ object FailedCheck {
     explain(_)
 }
 
-trait BrokenConfinementMessage[X] {
-  def format(x: Any): String
+extension [E, E2, A](self: Either[E, Either[E2, A]]) {
+  def mergeLeft = 
+    self.fold(Left(_), identity)
 }
 
-type IfBroken[X] = BrokenConfinementMessage[X]
+trait IfBroken[X] {
+  def format(x: Any): String
+}
 
 object BrokenConfinements {
   transparent inline def unapplySeq(validated: Checked[?]): List[FailedCheck] =
